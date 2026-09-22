@@ -1,130 +1,198 @@
 import { Badge } from "@/components/ui/badge";
+import { humanize } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import type {
-  CallOutcome,
-  CampaignStatus,
-  ContactStatus,
-  LiveCallState,
-  Sentiment,
-} from "@/lib/types";
 
-function BadgeDot({ className }: { className?: string }) {
-  return <span className={cn("size-1.5 rounded-full bg-current", className)} />;
+/** Badge tones, expressed as class strings so the mapping stays declarative. */
+const TONES = {
+  neutral: "bg-secondary text-secondary-foreground",
+  success: "bg-emerald-600/15 text-emerald-700 dark:text-emerald-400",
+  info: "bg-blue-600/15 text-blue-700 dark:text-blue-400",
+  progress: "bg-sky-600/15 text-sky-700 dark:text-sky-400",
+  warning: "bg-amber-600/15 text-amber-700 dark:text-amber-400",
+  danger: "bg-red-600/15 text-red-700 dark:text-red-400",
+  muted: "bg-secondary text-muted-foreground",
+} as const;
+
+type Tone = keyof typeof TONES;
+
+function toneFor(map: Record<string, Tone>, value: string | null | undefined): Tone {
+  if (!value) return "muted";
+  return map[value.toLowerCase()] ?? "neutral";
 }
 
-const CAMPAIGN_STYLES: Record<CampaignStatus, { label: string; className: string }> = {
-  draft: { label: "Draft", className: "bg-secondary text-secondary-foreground" },
-  active: { label: "Active", className: "bg-emerald-600/15 text-emerald-700 dark:text-emerald-400" },
-  paused: { label: "Paused", className: "bg-amber-600/15 text-amber-700 dark:text-amber-400" },
-  completed: { label: "Completed", className: "bg-blue-600/15 text-blue-700 dark:text-blue-400" },
-};
+function Dot() {
+  return <span className="size-1.5 rounded-full bg-current" />;
+}
 
-export function CampaignStatusBadge({ status }: { status: CampaignStatus }) {
-  const s = CAMPAIGN_STYLES[status];
+export function StatusBadge({
+  value,
+  toneMap,
+  className,
+}: {
+  value: string | null | undefined;
+  toneMap: Record<string, Tone>;
+  className?: string;
+}) {
+  const tone = toneFor(toneMap, value);
   return (
-    <Badge variant="outline" className={cn("gap-1.5 border-transparent", s.className)}>
-      <BadgeDot />
-      {s.label}
+    <Badge
+      variant="outline"
+      className={cn("gap-1.5 border-transparent", TONES[tone], className)}
+    >
+      <Dot />
+      {humanize(value)}
     </Badge>
   );
 }
 
-const CONTACT_STYLES: Record<ContactStatus, { label: string; className: string }> = {
-  new: { label: "New", className: "bg-blue-600/15 text-blue-700 dark:text-blue-400" },
-  in_progress: { label: "In progress", className: "bg-secondary text-secondary-foreground" },
-  promised_to_pay: {
-    label: "Promised to pay",
-    className: "bg-emerald-600/15 text-emerald-700 dark:text-emerald-400",
-  },
-  payment_arranged: {
-    label: "Payment arranged",
-    className: "bg-teal-600/15 text-teal-700 dark:text-teal-400",
-  },
-  callback: { label: "Callback", className: "bg-violet-600/15 text-violet-700 dark:text-violet-400" },
-  disputed: { label: "Disputed", className: "bg-red-600/15 text-red-700 dark:text-red-400" },
-  do_not_call: { label: "Do not call", className: "bg-zinc-600/15 text-zinc-700 dark:text-zinc-400" },
-  closed: { label: "Closed", className: "bg-secondary text-muted-foreground" },
+const CUSTOMER_TONES: Record<string, Tone> = {
+  active: "success",
+  inactive: "muted",
 };
 
-export function ContactStatusBadge({ status }: { status: ContactStatus }) {
-  const s = CONTACT_STYLES[status];
+export function CustomerStatusBadge({ status }: { status: string }) {
+  return <StatusBadge value={status} toneMap={CUSTOMER_TONES} />;
+}
+
+const ACCOUNT_TONES: Record<string, Tone> = {
+  active: "success",
+  paid: "info",
+  disputed: "danger",
+  closed: "muted",
+  on_hold: "warning",
+};
+
+export function AccountStatusBadge({ status }: { status: string }) {
+  return <StatusBadge value={status} toneMap={ACCOUNT_TONES} />;
+}
+
+const CAMPAIGN_TONES: Record<string, Tone> = {
+  draft: "neutral",
+  ready: "info",
+  running: "success",
+  paused: "warning",
+  completed: "info",
+  archived: "muted",
+};
+
+export function CampaignStatusBadge({ status }: { status: string }) {
+  return <StatusBadge value={status} toneMap={CAMPAIGN_TONES} />;
+}
+
+const LEAD_TONES: Record<string, Tone> = {
+  pending: "neutral",
+  queued: "info",
+  processing: "progress",
+  completed: "success",
+  retry: "warning",
+  skipped: "muted",
+  failed: "danger",
+};
+
+export function LeadStatusBadge({ status }: { status: string }) {
+  return <StatusBadge value={status} toneMap={LEAD_TONES} />;
+}
+
+const IMPORT_TONES: Record<string, Tone> = {
+  uploaded: "neutral",
+  processing: "progress",
+  completed: "success",
+  partially_completed: "warning",
+  failed: "danger",
+};
+
+export function ImportStatusBadge({ status }: { status: string }) {
+  return <StatusBadge value={status} toneMap={IMPORT_TONES} />;
+}
+
+const PAYMENT_TONES: Record<string, Tone> = {
+  completed: "success",
+  pending: "warning",
+  failed: "danger",
+};
+
+export function PaymentStatusBadge({ status }: { status: string }) {
+  return <StatusBadge value={status} toneMap={PAYMENT_TONES} />;
+}
+
+export function RoleBadge({ role }: { role: string }) {
+  const tone: Tone = role === "SUPER_ADMIN" || role === "ORG_ADMIN" ? "info" : "neutral";
   return (
-    <Badge variant="outline" className={cn("gap-1.5 border-transparent", s.className)}>
-      <BadgeDot />
-      {s.label}
+    <Badge variant="outline" className={cn("border-transparent", TONES[tone])}>
+      {role.replace(/_/g, " ")}
     </Badge>
   );
 }
 
-const OUTCOME_STYLES: Record<CallOutcome, { label: string; className: string }> = {
-  ai_resolved: {
-    label: "AI resolved",
-    className: "bg-emerald-600/15 text-emerald-700 dark:text-emerald-400",
-  },
-  promise_to_pay: {
-    label: "Promise to pay",
-    className: "bg-teal-600/15 text-teal-700 dark:text-teal-400",
-  },
-  human_takeover: {
-    label: "Human takeover",
-    className: "bg-amber-600/15 text-amber-700 dark:text-amber-400",
-  },
-  callback_scheduled: {
-    label: "Callback",
-    className: "bg-violet-600/15 text-violet-700 dark:text-violet-400",
-  },
-  no_answer: { label: "No answer", className: "bg-secondary text-muted-foreground" },
-  voicemail: { label: "Voicemail", className: "bg-secondary text-muted-foreground" },
-  busy: { label: "Busy", className: "bg-secondary text-muted-foreground" },
-  failed: { label: "Failed", className: "bg-red-600/15 text-red-700 dark:text-red-400" },
+// ==========================================
+// Phase 2 Badges
+// ==========================================
+
+const CALL_TONES: Record<string, Tone> = {
+  connecting: "progress",
+  ringing: "warning",
+  connected: "success",
+  ai_talking: "info",
+  customer_talking: "success",
+  on_hold: "warning",
+  transferring: "progress",
+  human_connected: "info",
+  ending: "muted",
+  failed: "danger",
 };
 
-export function OutcomeBadge({ outcome }: { outcome: CallOutcome }) {
-  const s = OUTCOME_STYLES[outcome];
-  return (
-    <Badge variant="outline" className={cn("gap-1.5 border-transparent", s.className)}>
-      <BadgeDot />
-      {s.label}
-    </Badge>
-  );
+export function CallStatusBadge({ status, className }: { status: string; className?: string }) {
+  return <StatusBadge value={status} toneMap={CALL_TONES} className={className} />;
 }
 
-const SENTIMENT_STYLES: Record<Sentiment, { className: string; label: string }> = {
-  positive: { className: "text-emerald-600 dark:text-emerald-400", label: "Positive" },
-  neutral: { className: "text-muted-foreground", label: "Neutral" },
-  negative: { className: "text-red-600 dark:text-red-400", label: "Negative" },
+const AI_STATE_TONES: Record<string, Tone> = {
+  idle: "muted",
+  listening: "progress",
+  thinking: "warning",
+  speaking: "info",
+  interrupted: "danger",
+  transfer_pending: "progress",
+  failed: "danger",
 };
 
-export function SentimentBadge({ sentiment }: { sentiment: Sentiment }) {
-  const s = SENTIMENT_STYLES[sentiment];
-  return (
-    <span className={cn("inline-flex items-center gap-1.5 text-xs", s.className)}>
-      <BadgeDot />
-      {s.label}
-    </span>
-  );
+export function AIStateBadge({ state, className }: { state: string; className?: string }) {
+  return <StatusBadge value={state} toneMap={AI_STATE_TONES} className={className} />;
 }
 
-const LIVE_STATE_STYLES: Record<LiveCallState, { label: string; className: string }> = {
-  dialing: { label: "Dialing", className: "bg-blue-600/15 text-blue-700 dark:text-blue-400" },
-  talking: {
-    label: "Talking",
-    className: "bg-emerald-600/15 text-emerald-700 dark:text-emerald-400",
-  },
-  hold: { label: "Hold", className: "bg-amber-600/15 text-amber-700 dark:text-amber-400" },
-  transferring: {
-    label: "Transferring",
-    className: "bg-violet-600/15 text-violet-700 dark:text-violet-400",
-  },
-  wrap_up: { label: "Wrap-up", className: "bg-secondary text-secondary-foreground" },
+const GATEWAY_TONES: Record<string, Tone> = {
+  online: "success",
+  offline: "muted",
+  busy: "warning",
+  error: "danger",
+  unknown: "neutral",
 };
 
-export function LiveStateBadge({ state }: { state: LiveCallState }) {
-  const s = LIVE_STATE_STYLES[state];
-  return (
-    <Badge variant="outline" className={cn("gap-1.5 border-transparent", s.className)}>
-      <BadgeDot />
-      {s.label}
-    </Badge>
-  );
+export function GatewayStatusBadge({ status }: { status: string }) {
+  return <StatusBadge value={status} toneMap={GATEWAY_TONES} />;
+}
+
+const AGENT_TONES: Record<string, Tone> = {
+  draft: "neutral",
+  ready: "info",
+  active: "success",
+  disabled: "muted",
+  error: "danger",
+};
+
+export function AIAgentStatusBadge({ status }: { status: string }) {
+  return <StatusBadge value={status} toneMap={AGENT_TONES} />;
+}
+
+const HEALTH_TONES: Record<string, Tone> = {
+  healthy: "success",
+  degraded: "warning",
+  offline: "danger",
+  rate_limited: "warning",
+  error: "danger",
+  connected: "success",
+  down: "danger",
+};
+
+export function ServiceHealthBadge({ status }: { status: string }) {
+  return <StatusBadge value={status} toneMap={HEALTH_TONES} />;
 }
