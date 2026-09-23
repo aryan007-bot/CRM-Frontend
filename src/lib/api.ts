@@ -149,7 +149,8 @@ export const tokenStore = {
 
 // ---------- internals ----------
 
-type QueryValue = string | number | boolean | null | undefined;
+/** Shared with the Phase 4 client. */
+export type QueryValue = string | number | boolean | null | undefined;
 
 function buildQuery(params?: Record<string, QueryValue>): string {
   if (!params) return "";
@@ -200,7 +201,8 @@ interface RequestOptions {
   auth?: boolean;
 }
 
-async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+/** Shared with the Phase 4 control-plane client — do not call from components. */
+export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = "GET", query, body, formData, auth = true } = options;
 
   const headers: Record<string, string> = { Accept: "application/json" };
@@ -245,8 +247,8 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   return (await response.json()) as T;
 }
 
-/** Unwraps the `{ data: ... }` envelope or returns the payload directly. */
-async function requestData<T>(path: string, options?: RequestOptions): Promise<T> {
+/** Unwraps the `{ data: ... }` envelope or returns the payload directly. Shared with Phase 4. */
+export async function requestData<T>(path: string, options?: RequestOptions): Promise<T> {
   const wrapped = await request<Single<T> | T>(path, options);
   if (
     wrapped !== null &&

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { LogOut, Menu, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { BrandMark, SidebarNav } from "@/components/sidebar-nav";
+import { ControlPlaneHeader } from "@/components/phase4/control-plane-header";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -86,6 +87,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="md:hidden">
             <span className="text-sm font-semibold">Recovery CRM</span>
           </div>
+
+          {/* Phase 4 control-plane status strip (env badge, health, alerts). */}
+          <ControlPlaneHeader />
 
           <div className="ml-auto flex items-center gap-2">
             <ThemeToggle />

@@ -3,35 +3,117 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Activity,
+  AlertTriangle as AlertTriangleIcon,
   BarChart3,
   Bot,
   BrainCircuit,
   Building2,
   CalendarClock,
+  CloudCog,
+  Cpu,
+  Database,
   FileSpreadsheet,
+  Gauge,
+  GitBranch,
   Handshake,
   Landmark,
   LayoutDashboard,
   ListOrdered,
   Megaphone,
   Radio,
+  ScrollText,
   Settings2,
   ShieldAlert,
+  ShieldCheck,
   Server,
+  Sparkles,
   UserRound,
   Users,
   Wallet,
+  Workflow,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { can, type Capability } from "@/lib/capabilities";
+import { useAuth } from "@/lib/auth";
+
+interface NavItem {
+  href: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  /** When set, the item renders only for roles holding the capability. */
+  capability?: Capability;
+}
 
 interface NavSection {
   title?: string;
-  items: {
-    href: string;
-    label: string;
-    icon: typeof LayoutDashboard;
-  }[];
+  items: NavItem[];
 }
+
+/** Phase 4 control-plane sections — rendered only for authorized roles. */
+const PHASE4_SECTIONS: NavSection[] = [
+  {
+    title: "OPERATIONS",
+    items: [
+      { href: "/system", label: "System Overview", icon: Activity, capability: "system.read" },
+      { href: "/operations", label: "Live Operations", icon: Radio, capability: "system.read" },
+      { href: "/operations/events", label: "Event Stream", icon: ScrollText, capability: "system.read" },
+    ],
+  },
+  {
+    title: "INFRASTRUCTURE",
+    items: [
+      { href: "/infrastructure/services", label: "Services", icon: Server, capability: "infrastructure.read" },
+      { href: "/infrastructure/workers", label: "Workers", icon: Cpu, capability: "worker.read" },
+      { href: "/infrastructure/queues", label: "Queues", icon: Workflow, capability: "queue.read" },
+      { href: "/infrastructure/telephony", label: "Telephony", icon: Radio, capability: "infrastructure.read" },
+      { href: "/infrastructure/database", label: "Database", icon: Database, capability: "infrastructure.read" },
+      { href: "/infrastructure/capacity", label: "Capacity", icon: Gauge, capability: "infrastructure.read" },
+      { href: "/infrastructure/logs", label: "Logs", icon: ScrollText, capability: "infrastructure.read" },
+      { href: "/infrastructure/api-usage", label: "API Usage", icon: BarChart3, capability: "infrastructure.read" },
+      { href: "/infrastructure/environments", label: "Environments", icon: CloudCog, capability: "deployment.read" },
+      { href: "/infrastructure/performance", label: "Performance", icon: Activity, capability: "infrastructure.read" },
+    ],
+  },
+  {
+    title: "AI PLATFORM",
+    items: [
+      { href: "/ai/infrastructure", label: "AI Infrastructure", icon: Sparkles, capability: "ai_provider.read" },
+      { href: "/ai/providers", label: "Providers", icon: Bot, capability: "ai_provider.read" },
+      { href: "/ai/models", label: "Models", icon: BrainCircuit, capability: "ai_model.read" },
+      { href: "/ai/routing", label: "Routing", icon: Workflow, capability: "ai_routing.read" },
+      { href: "/ai/usage", label: "Quota & Usage", icon: BarChart3, capability: "usage.read" },
+      { href: "/ai/voice", label: "Voice Services", icon: Radio, capability: "ai_provider.read" },
+    ],
+  },
+  {
+    title: "RELIABILITY",
+    items: [
+      { href: "/reliability/incidents", label: "Incidents", icon: ShieldAlert, capability: "incident.read" },
+      { href: "/reliability/alerts", label: "Alerts", icon: AlertTriangleIcon, capability: "alert.read" },
+      { href: "/reliability/jobs", label: "Failed Jobs", icon: ListOrdered, capability: "queue.read" },
+    ],
+  },
+  {
+    title: "DEPLOYMENT",
+    items: [
+      { href: "/deployments", label: "Deployments", icon: GitBranch, capability: "deployment.read" },
+    ],
+  },
+  {
+    title: "SECURITY",
+    items: [
+      { href: "/security/events", label: "Security Events", icon: ShieldCheck, capability: "security.read" },
+      { href: "/audit", label: "Audit Log", icon: ScrollText, capability: "audit.read" },
+    ],
+  },
+  {
+    title: "ADMINISTRATION",
+    items: [
+      { href: "/settings/system", label: "System Settings", icon: Settings2, capability: "configuration.read" },
+    ],
+  },
+];
 
 const SECTIONS: NavSection[] = [
   {
@@ -101,17 +183,25 @@ function isActive(pathname: string, href: string): boolean {
 
 export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
+  const { user } = useAuth();
+  const roles = user?.roles;
+
+  const visible = (item: NavItem) => !item.capability || can(item.capability, roles);
+  const phase4 = PHASE4_SECTIONS.map((section) => ({
+    ...section,
+    items: section.items.filter(visible),
+  })).filter((section) => section.items.length > 0);
 
   return (
     <nav className="flex flex-col gap-4 overflow-y-auto pr-1">
-      {SECTIONS.map((section, idx) => (
+      {[...SECTIONS, ...phase4].map((section, idx) => (
         <div key={idx} className="flex flex-col gap-1">
           {section.title ? (
             <p className="px-3 py-1 text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
               {section.title}
             </p>
           ) : null}
-          {section.items.map((item) => {
+          {section.items.filter(visible).map((item) => {
             const active = isActive(pathname, item.href);
             return (
               <Link
@@ -146,7 +236,7 @@ export function BrandMark() {
       <span className="leading-tight">
         <span className="block text-sm font-semibold">Recovery CRM</span>
         <span className="block text-[11px] text-muted-foreground">
-          Phase 3 · Recovery Operations
+          Recovery Operations · Control Plane
         </span>
       </span>
     </Link>
