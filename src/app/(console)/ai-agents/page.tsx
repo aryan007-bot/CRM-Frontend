@@ -154,7 +154,15 @@ export default function AiAgentsPage() {
       </div>
 
       {loading ? (
-        <TableSkeleton rows={5} columns={6} />
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableBody>
+                <TableSkeleton rows={5} columns={6} />
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       ) : error ? (
         <ErrorState message={error} onRetry={fetchAgents} />
       ) : agents.length === 0 ? (

@@ -69,7 +69,11 @@ export default function CampaignOverviewPage() {
           </CardHeader>
           <CardContent>
             {distribution.loading && !distribution.data ? (
-              <TableSkeleton rows={3} columns={1} />
+              <Table>
+                <TableBody>
+                  <TableSkeleton rows={3} columns={1} />
+                </TableBody>
+              </Table>
             ) : distribution.error ? (
               <ErrorState message={distribution.error} onRetry={distribution.refresh} compact />
             ) : (
@@ -91,7 +95,11 @@ export default function CampaignOverviewPage() {
           </CardHeader>
           <CardContent>
             {distribution.loading && !distribution.data ? (
-              <TableSkeleton rows={3} columns={1} />
+              <Table>
+                <TableBody>
+                  <TableSkeleton rows={3} columns={1} />
+                </TableBody>
+              </Table>
             ) : distribution.error ? (
               <div className="h-10" />
             ) : (
@@ -115,7 +123,11 @@ export default function CampaignOverviewPage() {
           </CardHeader>
           <CardContent>
             {distribution.loading && !distribution.data ? (
-              <TableSkeleton rows={3} columns={1} />
+              <Table>
+                <TableBody>
+                  <TableSkeleton rows={3} columns={1} />
+                </TableBody>
+              </Table>
             ) : distribution.error ? (
               <div className="h-10" />
             ) : (
@@ -159,18 +171,26 @@ export default function CampaignOverviewPage() {
         </CardHeader>
         <CardContent className="px-0">
           {activity.loading && !activity.data ? (
-            <TableSkeleton rows={4} columns={3} />
+            <Table>
+              <TableBody>
+                <TableSkeleton rows={4} columns={3} />
+              </TableBody>
+            </Table>
           ) : activity.error ? (
             <div className="p-4">
               <ErrorState message={activity.error} onRetry={activity.refresh} compact />
             </div>
           ) : activity.data && activity.data.items.length === 0 ? (
-            <TableMessage
-              columns={3}
-              icon={Activity}
-              title="No activity yet"
-              description="Campaign events appear here once it starts processing leads."
-            />
+            <Table>
+              <TableBody>
+                <TableMessage
+                  columns={3}
+                  icon={Activity}
+                  title="No activity yet"
+                  description="Campaign events appear here once it starts processing leads."
+                />
+              </TableBody>
+            </Table>
           ) : (
             <Table>
               <TableHeader>

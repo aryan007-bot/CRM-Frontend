@@ -103,7 +103,15 @@ export default function TelephonyPage() {
       </div>
 
       {loading ? (
-        <TableSkeleton rows={4} columns={4} />
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableBody>
+                <TableSkeleton rows={4} columns={4} />
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       ) : error ? (
         <ErrorState message={error} onRetry={fetchData} />
       ) : (

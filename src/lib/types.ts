@@ -535,6 +535,13 @@ export interface LiveCall {
   recipient_phone: string;
   direction: "OUTBOUND" | "INBOUND";
   status: CallStatus;
+  mode?: "LIVE" | "SIMULATION";
+  telephony_status?: string;
+  ai_state?: string;
+  media_state?: string;
+  asterisk_channel_id?: string | null;
+  failure_code?: string | null;
+  failure_reason?: string | null;
   disposition: CallDisposition | null;
   duration_seconds: number;
   customer_name: string | null;
@@ -559,6 +566,41 @@ export interface CallCreate {
   agent_id?: string | null;
   recipient_phone: string;
   caller_phone?: string;
+  mode?: "LIVE" | "SIMULATION";
+}
+
+export interface TelephonyDiagnostics {
+  ready: boolean;
+  asterisk: {
+    status: string;
+    endpoint: string;
+    active_channels: number;
+  };
+  gateway: {
+    status: string;
+    name: string | null;
+    type: string | null;
+    active_channels: number;
+  };
+  endpoint: {
+    status: string;
+  };
+  outbound_route: {
+    status: string;
+    trunk: string;
+    context: string;
+  };
+  gsm: {
+    status: string;
+    signal_strength: number;
+    network_operator: string | null;
+  };
+}
+
+export interface TelephonyTestCallRequest {
+  destination_phone: string;
+  caller_phone?: string;
+  mode?: "LIVE" | "SIMULATION";
 }
 
 export interface CallDispositionUpdate {
